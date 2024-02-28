@@ -12,86 +12,93 @@
 </template>
 
 <script>
+
 export default {
     data() {
         return {
             email: '',
             password: '',
             passwordError: false,
-            passwordStatus: 'Password should be at least 5 chars long'
+            passwordStatus: 'password should be at least 5 chars long'
         }
     },
     methods: {
         handleValidation(e) {
             e.preventDefault();
-
-            console.log('Validation')
-            console.log('Password:', this.password)
-
-            if(this.password.length > 5) {
-                this.passwordError = false
-                this.passwordStatus = ''
-                console.log('pushing to home')
-                this.handleLogin(this.email, this.password)
-            }
-            else {
-                this.passwordError = true
-                this.passwordStatus = 'Password should be at least 5 chars long'
-                alert("Password should be at least 5 chars long")
-            }
-        },
-        async handleLogin(email, password) {
-            let url = this.restaurantBaseURL + 'api/admin/auth/login';
-            console.log('login url', url);
-
-            let params = {email: email, password: password}
-            console.log('login params', params)
+    
+            console.log('handleSubmit')
+            console.log('password' + this.password)
+           if (this.password.length > 5) {
+            this.passwordError = false
+            this.passwordStatus = ''
+            console.log('pushing to home' )
+            this.handleLogin( this.email, this.password)
+           }
+           else {
+            this.passwordError = true
+            this.passwordStatus = 'password should be at least 5 chars long'
+            alert("password should be at least 5 chars long")
+           }    
             
+        },
+        async handleLogin (email, password) {
+            let url = this.restaurantBaseURL +'api/admin/auth/login';
+            let params = {email: email, password: password}
+            console.log('login params' , params)
             await this.axios.post(url, params)
             .then((response) => {
-                console.log('Login response', response)
+                console.log('login response' , response)
 
-                if(response.data.access_token != null) {
-                    localStorage.setItem('isLoggedin', true);
-                    localStorage.setItem('delivery_app_token', response.data.access_token);
-                    localStorage.setItem('current_user_email', this.email)
-                }
-                else {
-                    alert('login failed - no access token')
-                }
-            })
-            .catch(error => {
-                alert('Login Failed - incorrect username or password')
-                console.log('Login error', error)
-            })
+            if (response.data.access_token != null) {
+            localStorage.setItem('isLoggedIn', true);
+            localStorage.setItem('delivery_app_token', response.data.access_token);
+            localStorage.setItem('current_user_email', this.email);
+            this.getAdminProfile();
+          }else{
+              alert('Login Failed - no access token');
+          }
+        })
+        .catch(error => {
+                alert('Login Failed - incorrect email or password')
+                console.log("Error is: ");
+                console.log(error);
+         });
+
+            // this.$router.push('/home')
         },
-        //Authorization Call
-        async getAdminProfile() {
-            let url = this.restaurantBaseURL + 'api/admin/profile';
-            console.log('login url', url); 
 
-            let bearerToken = localStorage.getItem('delivery_app_token');
+        //Authorization call
+        async getAdminProfile() {
+            let url = this.restaurantBaseURL +'api/admin/profile'
+            let bearerToken = localStorage.getItem('delivery_app_token')
             console.log('our bearerToken', bearerToken)
 
             const options = {
-                headers: { Authorization: `{Bearer ${bearerToken}}`}
+                headers: {Authorization: `Bearer ${bearerToken}`}
             }
-
             await this.axios.get(url, options)
             .then((response) => {
-                console.log('Authorization response', response);
-                localStorage.setItem('admin_role', response.data.role)
-                localStorage.setItem('admin_phone', response.data.phone_number)
+                console.log('response', response)
+                localStorage.setItem('admin_role', response.data.role);
+                localStorage.setItem('admin_phone', response.data.phone_number);
                 localStorage.setItem('admin_fname', response.data.first_name);
                 localStorage.setItem('admin_lname', response.data.last_name);
                 localStorage.setItem('admin_email', response.data.email);
                 localStorage.setItem('admin_id', response.data.id);
-                this.$router.push('/home')
+                this.$router.push('/home');
+
             })
-        }
+           
+            .catch(error => {
+                
+                console.log('error', error)
+                alert('Could not get admin profile-Please try again')
+            })
+        },
     },
 }
 </script>
+
 
 <style>
     form {
